@@ -9,6 +9,7 @@ import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf"
 import { CharacterTextSplitter } from "@langchain/textsplitters";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
+import { RetrievalQAChain } from "@langchain/classic/chains";
 
 
 dotenv.config();
@@ -84,8 +85,8 @@ async function main() {
     //console.log(vectorStore.memoryVectors[0]);
 
     //const query = "What does the Bible say about wisdom?";
-    const userInput = "A wise son maketh a glad father: but a foolish man despiseth his mother.";
-    //const userInput = await getUserInput("Enter a topic to search for in the PDF: ");
+    // Get user question for QA
+    const userInput = await getUserInput("Ask a question about the document: ");
 
     /*const results = await vectorStore.similaritySearchWithScore(userInput, 3);
     console.log("\n=== Similarity Search Results ===\n");
@@ -98,17 +99,21 @@ async function main() {
         //console.log("---");
     });*/
 
+    // QA Chain: Retrieve relevant docs and answer
     const retriever = vectorStore.asRetriever({
         searchType: "similarity",
         k: 3,
     });
 
-    const relevantDocs = await retriever.invoke(userInput);
+    const chain = RetrievalQAChain.fromLLM(llm, retriever, {
+        returnSourceDocuments: true,
+    });
 
-    console.log("\n=== Retriever Output ===\n");
-    //console.log(relevantDocs);
-    console.log(relevantDocs[0].pageContent);
+    const answer = await chain.invoke({ query: userInput });
+    console.log("\n=== RetrievalQAChain Answer ===\n");
+    console.log(answer?.text || "No answer generated.");
 
+    
 }
 
 main().catch(console.error);
