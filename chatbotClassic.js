@@ -5,9 +5,7 @@ import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf"
 import { CharacterTextSplitter } from "@langchain/textsplitters";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { createStuffDocumentsChain } from "@langchain/classic/chains/combine_documents";
-import { createRetrievalChain } from "@langchain/classic/chains/retrieval";
+import { RetrievalQAChain } from "@langchain/classic/chains";
 
 
 dotenv.config();
@@ -74,7 +72,7 @@ async function main() {
 
     console.log(`✅ Successfully created vector store with ${vectorStore.memoryVectors.length} documents.`);
 
-
+    //console.log(vectorStore.memoryVectors[0]);
 
     //const query = "What does the Bible say about wisdom?";
     // Get user question for QA
@@ -86,53 +84,20 @@ async function main() {
         k: 3,
     });
 
-    
-    const prompt = ChatPromptTemplate.fromTemplate("You are a helpful assistant. Use the following documents to answer:\n\n{context}\n\nQuestion: {input}");
-    
-
-    const combineDocsChain = await createStuffDocumentsChain({
-        llm: llm,
-        prompt: prompt,
+    const chain = RetrievalQAChain.fromLLM(llm, retriever, {
+        returnSourceDocuments: true,
     });
 
-    const retrievalChain = await createRetrievalChain({
-        retriever: retriever,
-        combineDocsChain: combineDocsChain
-    });
+    const answer = await chain.invoke({ query: userInput });
+    console.log("\n=== RetrievalQAChain Answer ===\n");
+    console.log(answer?.text || "No answer generated.");
 
+    /*const chatHistory = [ answer.input, answer.text ];
 
-    const response = await retrievalChain.invoke({
-        input: userInput,
-    })
-
-    //console.log(response);
-
-    //return;
-
-    console.log("\n=== Combine Chain Response ===\n");
-    console.log(response?.answer || "No response generated.");
-
-    console.log(response.context.length);
-
-    return;
-
-    /*const chain = await createRetrievalChain({ retriever: retriever, combineDocsChain });
-
-    const response = await chain.invoke({
-        context: splitDocs,
-        question: userInput,
-    });
-
-    console.log("\n=== Combine Chain Response ===\n");
-    console.log(response?.content || "No response generated.");
-
-    console.log(response);
-
-    return;
-
-    const relevantDocs = await retriever.invoke(userInput);
-    const context = relevantDocs.map(doc => doc.pageContent).join("\n---\n");*/
-
+    const userInput2 = await getUserInput("Is there anything else to ask? ");
+    const answer2 = await chain.invoke({ query: userInput2, chat_history: chatHistory });
+    console.log("\n=== RetrievalQAChain Answer with Chat History ===\n");
+    console.log(answer2?.text || "No answer generated.");*/
 }
 
 main().catch(console.error);
