@@ -24,16 +24,16 @@ async function main() {
     const result = await chatbot.uploadDocument("./documents/proverbs.pdf");
     console.log(result);
 
-    // Send a message about the document
-    //const query = "What does the Bible say about wisdom?";
-
-    // Get user question for QA
-    const query = await getUserInput("Ask a question about the document: ");
-
-    const response = await chatbot.sendMessage(query);
-    console.log(`\nQuestion: ${query}`);
-    console.log(`Answer: ${response}`);
-    
+    while (true) {
+        const query = await getUserInput("Ask a question about the document (or type 'exit' to quit): ");
+        if (query.trim().toLowerCase() === 'exit') {
+            console.log("Goodbye!");
+            break;
+        }
+        const response = await chatbot.sendMessage(query);
+        console.log(`\nQuestion: ${query}`);
+        console.log(`Answer: ${response}`);
+    }
 }
 
 main().catch(console.error);
