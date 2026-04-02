@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QA Chatbot</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; padding: 0; }
+    .container { max-width: 500px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 24px; }
+    h1 { text-align: center; }
+    #chat { min-height: 120px; margin-bottom: 16px; }
+    .msg { margin: 8px 0; }
+    .user { color: #1976d2; }
+    .bot { color: #388e3c; }
+    #question { width: 100%; padding: 8px; font-size: 1em; }
+    #askBtn { padding: 8px 16px; font-size: 1em; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>QA Chatbot</h1>
+    <div id="chat"></div>
+    <input id="question" type="text" placeholder="Ask a question..." />
+    <button id="askBtn">Ask</button>
+  </div>
+  <script>
+    const chat = document.getElementById('chat');
+    const questionInput = document.getElementById('question');
+    const askBtn = document.getElementById('askBtn');
+
+    function appendMsg(text, sender) {
+      const div = document.createElement('div');
+      div.className = 'msg ' + sender;
+      div.textContent = (sender === 'user' ? 'You: ' : 'Bot: ') + text;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    askBtn.onclick = async () => {
+      const question = questionInput.value.trim();
+      if (!question) return;
+      appendMsg(question, 'user');
+      questionInput.value = '';
+      appendMsg('Thinking...', 'bot');
+      try {
+        const res = await fetch('/api/qa', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question })
+        });
+        const data = await res.json();
+        chat.lastChild.textContent = 'Bot: ' + (data.answer || 'No answer.');
+      } catch (e) {
+        chat.lastChild.textContent = 'Bot: Error.';
+      }
+    };
+    questionInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') askBtn.click();
+    });
+  </script>
+</body>
+</html>
