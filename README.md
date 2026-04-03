@@ -18,6 +18,9 @@ This is a RAG chatbot that answers questions using the book of Proverbs, which i
 2. Open the project in Visual Studio or VS Code.
 3. Open the terminal.
 4. Install dependencies by typing the command "npm install".
+5. Create a .env file based on the example and replacing the keys with ones of your own.
+6. For the GITHUB_TOKEN use a key created from GitHub using the gpt-4o-mini model.
+7. For the EMBEDDING_TOKEN use a key created from GitHub using the text-embedding-3-small model.
 
 ## How To Run From The Terminal
 1. Run the application by typing the command "node app.js".
